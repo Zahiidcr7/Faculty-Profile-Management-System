@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Faculty Login - FPMS</title>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="css/login+sign.css">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+</head>
+<body>
+
+<!-- Background Slideshow -->
+<div class="slideshow-bg" id="slideshowBg">
+    <div class="slide active" style="background-image: url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1920&h=1080&fit=crop');"></div>
+    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=1920&h=1080&fit=crop');"></div>
+    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1544717305-38b9144f7a1b?w=1920&h=1080&fit=crop');"></div>
+    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1920&h=1080&fit=crop');"></div>
+    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1562774053-701939374585?w=1920&h=1080&fit=crop');"></div>
+</div>
+
+<div class="auth-box">
+    <div class="auth-header">
+        <div class="icon-circle">
+            <i class="fas fa-chalkboard-teacher"></i>
+        </div>
+        <h2>Faculty Login</h2>
+        <p>Access your faculty dashboard</p>
+    </div>
+
+    <div class="auth-body">
+        <!-- Google Sign In Button -->
+        <button type="button" class="btn-google" id="googleSignInBtn">
+            <i class="fab fa-google"></i> Sign in with Google
+        </button>
+
+        <div class="divider">
+            <span>OR</span>
+        </div>
+
+        <!-- Email Login Form -->
+        <form id="loginForm">
+            <div class="input-group">
+                <i class="fas fa-envelope"></i>
+                <input type="email" id="email" placeholder="Email Address" required autocomplete="email">
+            </div>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="password" placeholder="Password" required autocomplete="current-password">
+                <i class="fas fa-eye toggle-password" data-target="password"></i>
+            </div>
+
+            <div class="row">
+                <label>
+                    <input type="checkbox" id="rememberMe"> Remember me
+                </label>
+                <a href="#" id="forgotPasswordLink">Forgot password?</a>
+            </div>
+
+            <button type="button" class="btn" id="loginBtn">
+                <span class="btn-text">Sign In</span>
+                <span class="btn-loading" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i> Signing in...
+                </span>
+            </button>
+        </form>
+
+        <div id="message" class="message-container"></div>
+
+        <p style="text-align:center; margin-top:20px;">
+            No account?
+            <a href="facultySignup.html">Sign Up</a>
+        </p>
+    </div>
+</div>
+
+<!-- Password Reset Modal -->
+<div id="resetModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <i class="fas fa-envelope-open-text"></i>
+            <h3>Reset Password</h3>
+        </div>
+        <div class="modal-body">
+            <div id="resetStep1">
+                <p>Enter your email address to receive a password reset link</p>
+                <div class="input-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="resetEmail" placeholder="Email Address" required>
+                </div>
+                <div id="step1Message" class="message-container" style="display: none;"></div>
+                <button type="button" class="btn" id="sendResetLinkBtn">
+                    <span class="btn-text">Send Reset Link</span>
+                    <span class="btn-loading" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i> Sending...
+                    </span>
+                </button>
+                <button type="button" class="btn btn-secondary" id="backToLoginBtn">Back to Login</button>
+            </div>
+            
+            <div id="resetStep2" style="display: none;">
+                <div class="verification-steps">
+                    <div class="step">
+                        <i class="fas fa-envelope"></i>
+                        <span>Check your inbox and spam folder</span>
+                    </div>
+                    <div class="step">
+                        <i class="fas fa-link"></i>
+                        <span>Click the password reset link in the email</span>
+                    </div>
+                    <div class="step">
+                        <i class="fas fa-key"></i>
+                        <span>Create a new password and login</span>
+                    </div>
+                </div>
+                <div id="step2Message" class="message-container" style="display: none;"></div>
+                <button type="button" class="btn-resend" id="resendResetLinkBtn">
+                    <i class="fas fa-redo-alt"></i> Resend Reset Link
+                </button>
+                <button type="button" class="btn-cancel" id="closeResetModalBtn">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================
+// BACKGROUND SLIDESHOW
+// ============================================
+const slides = document.querySelectorAll('.slide');
+let currentSlide = 0;
+let slideInterval;
+
+function nextSlide() {
+    slides[currentSlide].classList.remove('active');
+    currentSlide = (currentSlide + 1) % slides.length;
+    slides[currentSlide].classList.add('active');
+}
+
+function startSlideshow() {
+    slideInterval = setInterval(nextSlide, 5000);
+}
+
+function stopSlideshow() {
+    if (slideInterval) clearInterval(slideInterval);
+}
+
+// Start slideshow
+startSlideshow();
+
+// Pause on hover, resume on mouse leave
+const slideshowBg = document.getElementById('slideshowBg');
+if (slideshowBg) {
+    slideshowBg.addEventListener('mouseenter', stopSlideshow);
+    slideshowBg.addEventListener('mouseleave', startSlideshow);
+    
+    // Click to change slide manually (cursor pointer effect)
+    slideshowBg.addEventListener('click', () => {
+        nextSlide();
+    });
+}
+
+// =================== FIREBASE CONFIGURATION ===================
+const firebaseConfig = {
+    apiKey: "AIzaSyCLUvxU19ePhSex0g0-VEVZJlwVP4vkRiU",
+    authDomain: "faculty-profile-manageme-b912b.firebaseapp.com",
+    projectId: "faculty-profile-manageme-b912b",
+    storageBucket: "faculty-profile-manageme-b912b.firebasestorage.app",
+    messagingSenderId: "492340972765",
+    appId: "1:492340972765:web:30ef69e2ce0e6e59c9df34",
+    measurementId: "G-42SHN6353G"
+};
+
+// Initialize Firebase
+let auth, db;
+try {
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    auth = firebase.auth();
+    db = firebase.firestore();
+    console.log("✅ Firebase initialized");
+} catch (error) {
+    console.error("Firebase init error:", error);
+}
+
+// DOM Elements
+const loginBtn = document.getElementById('loginBtn');
+const loginForm = document.getElementById('loginForm');
+const messageDiv = document.getElementById('message');
+const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+const googleSignInBtn = document.getElementById('googleSignInBtn');
+const resetModal = document.getElementById('resetModal');
+const sendResetLinkBtn = document.getElementById('sendResetLinkBtn');
+const backToLoginBtn = document.getElementById('backToLoginBtn');
+const resendResetLinkBtn = document.getElementById('resendResetLinkBtn');
+const closeResetModalBtn = document.getElementById('closeResetModalBtn');
+const resetEmailInput = document.getElementById('resetEmail');
+const step1Message = document.getElementById('step1Message');
+const step2Message = document.getElementById('step2Message');
+
+let currentResetEmail = '';
+
+function showMessage(element, text, type = "info") {
+    if (!element) return;
+    element.textContent = text;
+    element.className = "message-container " + type;
+    element.style.display = text ? 'block' : 'none';
+}
+
+function showLoginMessage(text, type = "info") {
+    if (!messageDiv) return;
+    messageDiv.textContent = text;
+    messageDiv.className = "message-container " + type;
+    messageDiv.style.display = 'block';
+    if (type === 'success') {
+        setTimeout(() => {
+            if (messageDiv.textContent === text) messageDiv.style.display = 'none';
+        }, 5000);
+    }
+}
+
+function showStep(stepNumber) {
+    const step1 = document.getElementById('resetStep1');
+    const step2 = document.getElementById('resetStep2');
+    if (step1) step1.style.display = stepNumber === 1 ? 'block' : 'none';
+    if (step2) step2.style.display = stepNumber === 2 ? 'block' : 'none';
+    if (step1Message) showMessage(step1Message, '', 'info');
+    if (step2Message) showMessage(step2Message, '', 'info');
+}
+
+// Send password reset email
+async function sendPasswordResetEmail(email) {
+    try {
+        await auth.sendPasswordResetEmail(email);
+        console.log("✅ Password reset email sent");
+        return { success: true };
+    } catch (error) {
+        console.error("Error:", error);
+        return { success: false, error: error };
+    }
+}
+
+async function checkUserExists(email) {
+    try {
+        const methods = await auth.fetchSignInMethodsForEmail(email);
+        if (methods && methods.length > 0) return true;
+        
+        if (db) {
+            const snapshot = await db.collection('faculty')
+                .where('email', '==', email.toLowerCase())
+                .limit(1)
+                .get();
+            if (!snapshot.empty) return true;
+        }
+        return false;
+    } catch (error) {
+        console.error("Check user error:", error);
+        return true;
+    }
+}
+
+// Toggle password visibility
+const togglePassword = document.querySelector('.toggle-password');
+if (togglePassword) {
+    const passwordInput = document.getElementById('password');
+    togglePassword.addEventListener('click', function() {
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            this.classList.remove('fa-eye');
+            this.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            this.classList.remove('fa-eye-slash');
+            this.classList.add('fa-eye');
+        }
+    });
+}
+
+// Google Sign In Handler
+async function handleGoogleSignIn() {
+    const googleProvider = new firebase.auth.GoogleAuthProvider();
+    googleProvider.addScope('email');
+    googleProvider.addScope('profile');
+    
+    googleSignInBtn.disabled = true;
+    const originalText = googleSignInBtn.innerHTML;
+    googleSignInBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting to Google...';
+    
+    try {
+        const result = await auth.signInWithPopup(googleProvider);
+        const user = result.user;
+        
+        console.log("✅ Google sign in successful:", user.email);
+        
+        // Check if user exists in Firestore, if not, create record
+        const userDoc = await db.collection('faculty').doc(user.uid).get();
+        
+        if (!userDoc.exists) {
+            // New Google user - save to Firestore
+            await db.collection('faculty').doc(user.uid).set({
+                fullName: user.displayName || '',
+                email: user.email,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                role: 'faculty',
+                uid: user.uid,
+                profileComplete: false,
+                emailVerified: user.emailVerified || true,
+                signupMethod: 'google',
+                photoURL: user.photoURL || '',
+                lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            console.log("✅ New Google user saved to Firestore");
+        } else {
+            // Existing user - update last login
+            await db.collection('faculty').doc(user.uid).update({
+                lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            console.log("✅ Existing user - last login updated");
+        }
+        
+        showLoginMessage("✅ Login successful! Redirecting to dashboard...", "success");
+        setTimeout(() => {
+            window.location.href = "facultyDashboard.html";
+        }, 1500);
+        
+    } catch (error) {
+        console.error("Google sign in error:", error);
+        
+        let errorMessage = "Google sign in failed. ";
+        if (error.code === 'auth/popup-blocked') {
+            errorMessage = "Popup was blocked. Please allow popups for this site.";
+        } else if (error.code === 'auth/popup-closed-by-user') {
+            errorMessage = "Sign in cancelled. Please try again.";
+        } else if (error.code === 'auth/network-request-failed') {
+            errorMessage = "Network error. Please check your internet connection.";
+        } else if (error.code === 'auth/unauthorized-domain') {
+            errorMessage = "This domain is not authorized. Please contact support.";
+        } else {
+            errorMessage += error.message || "Please try again.";
+        }
+        
+        showLoginMessage(errorMessage, "error");
+        
+    } finally {
+        googleSignInBtn.disabled = false;
+        googleSignInBtn.innerHTML = originalText;
+    }
+}
+
+// Email Login Handler
+async function handleLogin() {
+    const email = document.getElementById('email')?.value.trim();
+    const password = document.getElementById('password')?.value;
+    const rememberMe = document.getElementById('rememberMe')?.checked || false;
+    
+    showLoginMessage("", "info");
+    
+    if (!email || !password) {
+        showLoginMessage("Please fill in all fields", "error");
+        return;
+    }
+    
+    loginBtn.disabled = true;
+    const btnText = loginBtn.querySelector('.btn-text');
+    const btnLoading = loginBtn.querySelector('.btn-loading');
+    if (btnText) btnText.style.display = 'none';
+    if (btnLoading) btnLoading.style.display = 'inline-block';
+    
+    try {
+        const persistence = rememberMe ? 
+            firebase.auth.Auth.Persistence.LOCAL : 
+            firebase.auth.Auth.Persistence.SESSION;
+        await auth.setPersistence(persistence);
+        
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+        
+        // Check if email is verified
+        if (!user.emailVerified) {
+            await user.sendEmailVerification();
+            await auth.signOut();
+            showLoginMessage("⚠️ Email not verified. A new verification link has been sent to your email. Please verify before logging in.", "error");
+            loginBtn.disabled = false;
+            if (btnText) btnText.style.display = 'inline-block';
+            if (btnLoading) btnLoading.style.display = 'none';
+            return;
+        }
+        
+        // Update last login in Firestore
+        if (db && user.uid) {
+            try {
+                await db.collection('faculty').doc(user.uid).update({
+                    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(() => {});
+            } catch (e) { console.log("Firestore update optional"); }
+        }
+        
+        showLoginMessage("✅ Login successful! Redirecting to dashboard...", "success");
+        setTimeout(() => {
+            window.location.href = "facultyDashboard.html";
+        }, 1500);
+        
+    } catch (error) {
+        console.error("Login error:", error);
+        let errorMessage = "Invalid email or password";
+        if (error.code === 'auth/too-many-requests') errorMessage = "Too many attempts. Try again later";
+        else if (error.code === 'auth/network-request-failed') errorMessage = "Network error. Check connection";
+        else if (error.code === 'auth/user-disabled') errorMessage = "Account has been disabled";
+        showLoginMessage(errorMessage, "error");
+    } finally {
+        loginBtn.disabled = false;
+        if (btnText) btnText.style.display = 'inline-block';
+        if (btnLoading) btnLoading.style.display = 'none';
+    }
+}
+
+// Forgot Password Handler
+if (sendResetLinkBtn) {
+    sendResetLinkBtn.addEventListener('click', async function() {
+        const email = resetEmailInput?.value.trim();
+        
+        if (!email) {
+            showMessage(step1Message, "Please enter your email address", "error");
+            return;
+        }
+        
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            showMessage(step1Message, "Please enter a valid email address", "error");
+            return;
+        }
+        
+        sendResetLinkBtn.disabled = true;
+        const btnText = sendResetLinkBtn.querySelector('.btn-text');
+        const btnLoading = sendResetLinkBtn.querySelector('.btn-loading');
+        if (btnText) btnText.style.display = 'none';
+        if (btnLoading) btnLoading.style.display = 'inline-block';
+        
+        showMessage(step1Message, "Checking account...", "info");
+        
+        try {
+            const userExists = await checkUserExists(email);
+            
+            if (!userExists) {
+                showMessage(step1Message, "❌ No account found with this email. Please sign up first.", "error");
+                return;
+            }
+            
+            showMessage(step1Message, "Sending reset link...", "info");
+            
+            const result = await sendPasswordResetEmail(email);
+            
+            if (result.success) {
+                currentResetEmail = email;
+                showStep(2);
+                showMessage(step2Message, "✅ Password reset link sent! Check your email inbox and spam folder.", "success");
+            } else {
+                let errorMsg = "Failed to send reset link. ";
+                if (result.error?.code === 'auth/too-many-requests') {
+                    errorMsg = "Too many attempts. Please try again later.";
+                } else {
+                    errorMsg += result.error?.message || "Please try again.";
+                }
+                showMessage(step1Message, `❌ ${errorMsg}`, "error");
+            }
+        } catch (error) {
+            showMessage(step1Message, "❌ Unable to process request. Please try again.", "error");
+        } finally {
+            sendResetLinkBtn.disabled = false;
+            if (btnText) btnText.style.display = 'inline-block';
+            if (btnLoading) btnLoading.style.display = 'none';
+        }
+    });
+}
+
+// Resend Reset Link
+if (resendResetLinkBtn) {
+    resendResetLinkBtn.addEventListener('click', async function() {
+        if (!currentResetEmail) {
+            showMessage(step2Message, "Please go back and enter your email", "error");
+            showStep(1);
+            return;
+        }
+        
+        resendResetLinkBtn.disabled = true;
+        const originalText = resendResetLinkBtn.innerHTML;
+        resendResetLinkBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        
+        try {
+            const result = await sendPasswordResetEmail(currentResetEmail);
+            if (result.success) {
+                showMessage(step2Message, "✅ New reset link sent! Check your inbox.", "success");
+            } else {
+                showMessage(step2Message, "❌ Failed to resend. Please try again.", "error");
+            }
+        } catch (error) {
+            showMessage(step2Message, "❌ Error sending email. Please try again.", "error");
+        } finally {
+            resendResetLinkBtn.disabled = false;
+            resendResetLinkBtn.innerHTML = originalText;
+        }
+    });
+}
+
+// Event Listeners
+if (loginBtn) loginBtn.addEventListener('click', handleLogin);
+if (googleSignInBtn) googleSignInBtn.addEventListener('click', handleGoogleSignIn);
+
+if (loginForm) {
+    loginForm.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleLogin();
+        }
+    });
+}
+
+if (forgotPasswordLink) {
+    forgotPasswordLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        const loginEmail = document.getElementById('email')?.value.trim();
+        if (resetEmailInput && loginEmail) resetEmailInput.value = loginEmail;
+        if (resetModal) {
+            resetModal.style.display = 'flex';
+            showStep(1);
+            currentResetEmail = '';
+        }
+    });
+}
+
+if (backToLoginBtn) {
+    backToLoginBtn.addEventListener('click', function() {
+        if (resetModal) resetModal.style.display = 'none';
+        showStep(1);
+    });
+}
+
+if (closeResetModalBtn) {
+    closeResetModalBtn.addEventListener('click', function() {
+        if (resetModal) resetModal.style.display = 'none';
+        showStep(1);
+    });
+}
+
+window.addEventListener('click', function(event) {
+    if (event.target === resetModal) {
+        resetModal.style.display = 'none';
+        showStep(1);
+    }
+});
+
+// Check for reset success
+window.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('reset') === 'success' || urlParams.get('mode') === 'resetPassword') {
+        showLoginMessage("✅ Password reset successful! Please login with your new password.", "success");
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    if (urlParams.get('verified') === 'true') {
+        showLoginMessage("✅ Email verified! You can now login.", "success");
+    }
+    console.log("✅ Login page ready with Google Sign-In");
+});
+</script>
+
+</body>
+</html>

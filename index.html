@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Faculty Profile Management System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* ===== ADDITIONAL MOBILE RESPONSIVE STYLES ===== */
+        /* These styles enhance the existing CSS for mobile devices */
+        
+        * {
+            box-sizing: border-box;
+        }
+
+        /* Mobile Navigation */
+        @media (max-width: 768px) {
+            nav {
+                padding: 1rem;
+                text-align: center;
+            }
+            
+            nav .logo {
+                display: block;
+                margin-bottom: 1rem;
+                font-size: 1.3rem;
+            }
+            
+            nav div:last-child {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 0.5rem;
+            }
+            
+            nav a {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.85rem;
+                margin: 0;
+            }
+        }
+
+        /* Mobile Hero Section */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                text-align: center;
+                padding: 2rem 1rem;
+            }
+            
+            header img {
+                width: 100px;
+                height: 100px;
+                margin-bottom: 1.5rem;
+            }
+            
+            header h1 {
+                font-size: 1.8rem;
+            }
+            
+            header h2 {
+                font-size: 1.1rem;
+            }
+            
+            header p {
+                font-size: 0.9rem;
+                padding: 0 0.5rem;
+            }
+        }
+
+        /* Mobile College Section */
+        @media (max-width: 768px) {
+            .college-section {
+                padding: 2rem 1rem;
+            }
+            
+            .college-title {
+                font-size: 1.8rem;
+            }
+            
+            .college-sub {
+                font-size: 0.95rem;
+                padding: 0 0.5rem;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .history-box, .academic-box {
+                padding: 1.2rem;
+                margin: 1rem 0;
+            }
+        }
+
+        /* Mobile Department Section */
+        @media (max-width: 768px) {
+            .dept-section {
+                padding: 2rem 1rem;
+            }
+            
+            .dept-title {
+                font-size: 1.8rem;
+            }
+            
+            .dept-sub {
+                font-size: 0.95rem;
+                padding: 0 0.5rem;
+            }
+            
+            .dept-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .dept-card {
+                padding: 1.2rem;
+            }
+            
+            .dept-card .icon {
+                font-size: 2rem;
+            }
+            
+            .dept-card h3 {
+                font-size: 1.2rem;
+            }
+            
+            .dept-card p {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Mobile Team Section */
+        @media (max-width: 768px) {
+            .team-section {
+                padding: 2rem 1rem;
+            }
+            
+            .team-title {
+                font-size: 1.8rem;
+            }
+            
+            .team-subtitle {
+                font-size: 0.95rem;
+                padding: 0 0.5rem;
+            }
+            
+            .team-grid {
+                grid-template-columns: 1fr;
+                gap: 1.2rem;
+            }
+            
+            .team-card {
+                flex-direction: column;
+                text-align: center;
+                padding: 1.2rem;
+            }
+            
+            .team-card .avatar {
+                margin: 0 auto 1rem;
+                width: 70px;
+                height: 70px;
+                font-size: 2rem;
+            }
+            
+            .team-card h4 {
+                font-size: 1.1rem;
+            }
+            
+            .team-card p {
+                font-size: 0.85rem;
+            }
+            
+            .project-box {
+                padding: 1.2rem;
+                margin-bottom: 1.5rem;
+            }
+            
+            .tags {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .tag {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        /* Mobile Footer */
+        @media (max-width: 768px) {
+            .footer {
+                padding: 2rem 1rem;
+                text-align: center;
+            }
+            
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+        }
+
+        /* Tablet Optimization */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .grid, .dept-grid, .team-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .college-section, .dept-section, .team-section {
+                padding: 2rem 1.5rem;
+            }
+        }
+
+        /* Desktop Optimization */
+        @media (min-width: 1025px) {
+            .grid, .dept-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .team-grid {
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            }
+        }
+
+        /* Touch-friendly improvements for mobile */
+        @media (max-width: 768px) {
+            button, .btn, nav a, .back-home-btn {
+                min-height: 44px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .card, .dept-card, .team-card {
+                cursor: pointer;
+            }
+        }
+
+        /* Prevent text overflow */
+        @media (max-width: 480px) {
+            body {
+                font-size: 14px;
+            }
+            
+            h1 {
+                word-break: break-word;
+            }
+            
+            p, li {
+                word-break: break-word;
+            }
+            
+            .college-title, .dept-title, .team-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav>
+    <div class="logo">🎓 FPMS</div>
+    <div>
+        <a href="index.html">Home</a>
+        <a href="faculty-profiles.html">Faculty Profiles</a>
+        <a href="facultyLogin.html">Faculty Login</a>
+        <a href="adminLogin.html">Admin Login</a>
+    </div>
+</nav>
+
+<!-- ===== HERO SECTION ===== -->
+<header>
+    <img src="logo/images%20(3).jpg" alt="College Logo">
+    <div>
+        <h1>Faculty Profile <br> Management System</h1>
+        <h2>HVPM College of Engineering & Technology</h2>
+        <p>
+            A professional platform to manage faculty academic records,
+            profiles, research activities, and institutional information.
+        </p>
+    </div>
+</header>
+
+<section class="college-section">
+
+    <h2 class="college-title">About Our College</h2>
+    <p class="college-sub">
+        HVPM College of Engineering & Technology is a reputed institute focused on
+        technical excellence, innovation, and professional education.
+    </p>
+
+    <!-- Mission Vision -->
+    <div class="grid">
+
+        <div class="card">
+            <h3>🎯 Our Mission</h3>
+            <p>
+                To provide quality technical education that nurtures innovation,
+                critical thinking, and ethical leadership.
+            </p>
+        </div>
+
+        <div class="card">
+            <h3>👁 Our Vision</h3>
+            <p>
+                To become a globally recognized institute producing skilled
+                engineers and future technology leaders.
+            </p>
+        </div>
+
+    </div>
+
+    <!-- History -->
+    <div class="history-box">
+        <h3>📘 Our History & Legacy</h3>
+        <p>
+            HVPM College of Engineering & Technology, Amravati is affiliated with
+            Sant Gadge Baba Amravati University and approved by AICTE.
+            The institute provides modern engineering education supported
+            by experienced faculty and advanced laboratories.
+        </p>
+    </div>
+
+    <!-- Achievements Facilities -->
+    <div class="grid">
+
+        <div class="card">
+            <h3>🏆 Achievements & Recognition</h3>
+            <ul>
+                <li>NAAC Accredited Institution</li>
+                <li>Strong Placement Records</li>
+                <li>Research & Innovation Activities</li>
+                <li>Industry Collaborations</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h3>🏫 Campus Facilities</h3>
+            <ul>
+                <li>Central Library & Digital Resources</li>
+                <li>Advanced Engineering Laboratories</li>
+                <li>Wi-Fi Enabled Campus</li>
+                <li>Auditorium & Seminar Halls</li>
+            </ul>
+        </div>
+
+    </div>
+
+    <!-- Academic Excellence -->
+    <div class="academic-box">
+        <h3>🎓 Academic Excellence</h3>
+        <p>
+            The college offers undergraduate engineering programs including
+            Computer Engineering, Mechanical Engineering, Civil Engineering,
+            and Electronics Engineering with strong focus on research and innovation.
+        </p>
+    </div>
+
+</section>
+
+<section class="dept-section">
+
+    <h2 class="dept-title">Our Departments</h2>
+    <p class="dept-sub">
+        Explore our core engineering departments offering professional
+        technical education and industry-ready skills.
+    </p>
+
+    <div class="dept-grid">
+
+        <!-- CSE -->
+        <div class="dept-card">
+            <div class="icon">💻</div>
+            <h3>Computer Science & Engineering</h3>
+            <p>Software development, Artificial Intelligence, Web Technology and Data Science.</p>
+        </div>
+
+        <!-- IT -->
+        <div class="dept-card">
+            <div class="icon">🖥</div>
+            <h3>Information Technology</h3>
+            <p>Networking, Cyber Security, Web Development and Database Management.</p>
+        </div>
+
+        <!-- ENTC -->
+        <div class="dept-card">
+            <div class="icon">📡</div>
+            <h3>Electronics & Telecommunication</h3>
+            <p>Communication systems, embedded systems and digital electronics.</p>
+        </div>
+
+        <!-- Mechanical -->
+        <div class="dept-card">
+            <div class="icon">⚙</div>
+            <h3>Mechanical Engineering</h3>
+            <p>Thermal engineering, manufacturing processes and robotics.</p>
+        </div>
+
+        <!-- First Year -->
+        <div class="dept-card">
+            <div class="icon">📚</div>
+            <h3>First Year Engineering</h3>
+            <p>First-year engineering introduces fundamental science and engineering principles.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ===== ABOUT OUR TEAM ===== -->
+<section class="team-section">
+
+    <h2 class="team-title">About Our Team</h2>
+    <p class="team-subtitle">
+        Meet the dedicated team of students who developed this Faculty Profile Management System.
+    </p>
+
+    <div class="project-box">
+        <h3>Final Year Project - Batch 2026</h3>
+        <p>
+            This project was developed as part of the Software Engineering curriculum
+            under the Computer Science & Engineering Department.
+        </p>
+
+        <div class="tags">
+            <span class="tag gold">Course: CS Major Project</span>
+            <span class="tag blue">Guide: Prof.Rajeshri Shelke</span>
+        </div>
+    </div>
+
+    <div class="team-grid">
+
+        <div class="team-card">
+            <div class="avatar">👤</div>
+            <div>
+                <h4>Mohammad Zahid</h4>
+                <p class="role">Frontend Developer</p>
+                <p>UI Design & Database Design</p>
+                <p>📧 zahidsm2004@gmail.com</p>
+                <p>📞 +91 8793686139</p>
+            </div>
+        </div>
+
+        <div class="team-card">
+            <div class="avatar">👤</div>
+            <div>
+                <h4>Azmaan Adeem</h4>
+                <p class="role">Frontend Developer</p>
+                <p>Database Design & UI Design</p>
+                <p>📧 azadeem0603@gmail.com</p>
+                <p>📞 +91 9421001625</p>
+            </div>
+        </div>
+
+        <div class="team-card">
+            <div class="avatar">👤</div>
+            <div>
+                <h4>Shreya Dharmale</h4>
+                <p class="role">UI/UX Designer</p>
+                <p>Wireframes & Design System</p>
+                <p>📧 shreyadharmale@gmail.com</p>
+                <p>📞 +91 7507525222</p>
+            </div>
+        </div>
+
+        <div class="team-card">
+            <div class="avatar">👤</div>
+            <div>
+                <h4>Neha Mohod</h4>
+                <p class="role">Testing & Documentation</p>
+                <p>Quality Assurance & Reports</p>
+                <p>📧 nehamohod@gmail.com</p>
+                <p>📞 +91 7276214902</p>
+            </div>
+        </div>
+
+        <div class="team-card">
+            <div class="avatar">👤</div>
+            <div>
+                <h4>Tanvi Deshmukh</h4>
+                <p class="role">Testing & Documentation</p>
+                <p>Quality Assurance & Reports</p>
+                <p>📧 tanvideshmukh@gmail.com</p>
+                <p>📞 +91 9529995240</p>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+
+    <div class="footer-grid">
+
+        <div>
+            <h3>HVPM COET</h3>
+            <p>Empowering students with technical education and innovation.</p>
+        </div>
+
+        <div>
+            <h3>Contact Us</h3>
+            <p>Amravati, Maharashtra, India</p>
+            <p>📞 +91 8793686139</p>
+            <p>📧 zahidsm2004@gmail.com</p>
+        </div>
+
+    </div>
+
+</footer>
+
+</body>
+</html>

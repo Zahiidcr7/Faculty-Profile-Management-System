@@ -1,0 +1,1743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Profiles | EduPortal</title>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    
+    <style>
+        /* ===== GLOBAL STYLES ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: #f8fafc;
+            color: #1e293b;
+            line-height: 1.5;
+        }
+
+        /* ===== MAIN CONTAINER ===== */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ===== SIDEBAR NAVIGATION ===== */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #ffffff 0%, #f9fbfd 100%);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.02);
+            border-right: 1px solid #e2e8f0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 28px 24px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            color: #0f3b7a;
+            font-size: 1.4rem;
+        }
+
+        .logo-icon {
+            font-size: 1.8rem;
+            color: #2563eb;
+        }
+
+        .sidebar-nav {
+            padding: 24px 0;
+        }
+
+        .nav-section {
+            margin-bottom: 28px;
+        }
+
+        .nav-section-title {
+            padding: 0 24px 12px 24px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 12px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 24px;
+            color: #475569;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            position: relative;
+            cursor: pointer;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: linear-gradient(90deg, #eef2ff 0%, #ffffff 100%);
+            color: #2563eb;
+            border-left: 3px solid #2563eb;
+        }
+
+        .nav-icon {
+            width: 24px;
+            text-align: center;
+            margin-right: 14px;
+            font-size: 1.1rem;
+        }
+
+        .nav-text {
+            font-size: 0.95rem;
+        }
+
+        .department-badge {
+            margin-left: auto;
+            background: #e2e8f0;
+            color: #1e293b;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        /* ===== MAIN CONTENT AREA ===== */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            transition: all 0.3s ease;
+        }
+
+        /* ===== TOP NAVIGATION BAR ===== */
+        .top-navbar {
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 90;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .home-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: #1e293b;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: color 0.2s;
+            padding: 8px 16px;
+            border-radius: 30px;
+            background: #f1f5f9;
+        }
+
+        .home-link:hover {
+            color: #2563eb;
+            background: #eef2ff;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-title i {
+            color: #2563eb;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .viewer-badge {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(37,99,235,0.2);
+        }
+
+        /* ===== CONTENT SECTION ===== */
+        .content {
+            padding: 32px;
+        }
+
+        /* ===== SEARCH AND FILTER BAR ===== */
+        .search-section {
+            background: white;
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+            border: 1px solid #e2e8f0;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .search-box {
+            flex: 2;
+            min-width: 280px;
+            position: relative;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 16px 20px 16px 48px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 50px;
+            font-size: 1rem;
+            transition: all 0.2s;
+            background: #f8fafc;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(37,99,235,0.1);
+        }
+
+        .filter-options {
+            flex: 1;
+            min-width: 200px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .filter-select {
+            width: 100%;
+            padding: 16px 20px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            background: #f8fafc;
+            color: #1e293b;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 20px center;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #2563eb;
+            background: white;
+        }
+
+        .stats-badge {
+            background: #eef2ff;
+            color: #2563eb;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        /* ===== FILTER PILLS ===== */
+        .filter-pills {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .filter-pill {
+            padding: 10px 24px;
+            border-radius: 40px;
+            border: 1.5px solid #e2e8f0;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            color: #475569;
+        }
+
+        .filter-pill i {
+            color: #64748b;
+        }
+
+        .filter-pill:hover {
+            background: #f8fafc;
+            border-color: #2563eb;
+            color: #2563eb;
+        }
+
+        .filter-pill:hover i {
+            color: #2563eb;
+        }
+
+        .filter-pill.active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
+        .filter-pill.active i {
+            color: white;
+        }
+
+        /* ===== FACULTY CARDS GRID ===== */
+        .faculty-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 28px;
+            margin-top: 24px;
+        }
+
+        .faculty-card {
+            background: white;
+            border-radius: 24px;
+            padding: 28px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .faculty-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 30px -10px rgba(37,99,235,0.1);
+            border-color: #2563eb;
+        }
+
+        .card-accent {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 100%;
+            border-radius: 6px 0 0 6px;
+        }
+
+        .faculty-card-header {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+
+        .faculty-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px;
+            font-weight: 700;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+
+        .faculty-info {
+            flex: 1;
+        }
+
+        .faculty-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+
+        .faculty-dept {
+            background: #eef2ff;
+            color: #2563eb;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .faculty-designation {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 6px;
+        }
+
+        .faculty-details {
+            margin: 16px 0;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 16px;
+        }
+
+        .detail-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .detail-row i {
+            width: 20px;
+            color: #2563eb;
+        }
+
+        .faculty-stats-mini {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .stat-mini-item {
+            text-align: center;
+        }
+
+        .stat-mini-value {
+            font-weight: 700;
+            color: #0f172a;
+            font-size: 1.1rem;
+        }
+
+        .stat-mini-label {
+            font-size: 0.7rem;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .badge-container {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .badge-sm {
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .badge-award { background: #fef3c7; color: #92400e; }
+        .badge-patent { background: #e0f2fe; color: #0369a1; }
+        .badge-cert { background: #dcfce7; color: #166534; }
+        .badge-membership { background: #ede9fe; color: #6d28d9; }
+
+        .view-details-btn {
+            width: 100%;
+            margin-top: 20px;
+            padding: 14px;
+            background: white;
+            border: 1.5px solid #2563eb;
+            color: #2563eb;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .view-details-btn:hover {
+            background: #2563eb;
+            color: white;
+        }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 70px 20px;
+            background: white;
+            border-radius: 24px;
+            border: 1px dashed #cbd5e1;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #94a3b8;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            font-size: 1.6rem;
+            color: #1e293b;
+            margin-bottom: 12px;
+        }
+
+        .empty-state p {
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+
+        /* ===== LOADING SPINNER ===== */
+        .loading-spinner {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 70px 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #2563eb;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ===== MODAL STYLES ===== */
+        .profile-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: white;
+            width: 95%;
+            max-width: 1200px;
+            height: 90vh;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            animation: modalSlideIn 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            color: white;
+            padding: 20px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .modal-header h2 {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            opacity: 1;
+        }
+
+        .modal-body {
+            padding: 32px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        @keyframes modalSlideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* ===== PROFILE DETAIL STYLES ===== */
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+            padding: 30px;
+            border-radius: 20px;
+        }
+
+        .profile-avatar-large {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .profile-title h1 {
+            font-size: 2.2rem;
+            color: #0f172a;
+            margin-bottom: 8px;
+        }
+
+        .profile-badges {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .badge-primary {
+            background: #eef2ff;
+            color: #2563eb;
+        }
+
+        .badge-info {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+
+        .info-card {
+            background: #f8fafc;
+            padding: 24px;
+            border-radius: 18px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .info-card h3 {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            color: #0f172a;
+            font-size: 1.2rem;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 12px;
+        }
+
+        .info-card h3 i {
+            color: #2563eb;
+        }
+
+        .info-row {
+            display: flex;
+            margin-bottom: 12px;
+        }
+
+        .info-label {
+            width: 120px;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .info-value {
+            flex: 1;
+            color: #0f172a;
+        }
+
+        .items-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .items-list li {
+            padding: 16px;
+            margin-bottom: 12px;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .items-list li strong {
+            color: #2563eb;
+            font-size: 1rem;
+        }
+
+        .items-list li .item-meta {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-top: 6px;
+        }
+
+        .items-list li .status-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .status-badge.active { background: #d1fae5; color: #065f46; }
+        .status-badge.expired { background: #fee2e2; color: #991b1b; }
+        .status-badge.pending { background: #fef3c7; color: #92400e; }
+
+        .section-block {
+            margin-bottom: 30px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 24px;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e2e8f0;
+            color: #0f172a;
+            font-size: 1.3rem;
+        }
+
+        .section-title i {
+            color: #2563eb;
+        }
+
+        .count-badge {
+            background: #2563eb;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            margin-left: 12px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 80px;
+            }
+            .sidebar .nav-text,
+            .sidebar-header .logo-text,
+            .sidebar .nav-section-title,
+            .sidebar .department-badge {
+                display: none;
+            }
+            .main-content {
+                margin-left: 80px;
+            }
+            .logo-icon {
+                font-size: 2rem;
+                margin: 0 auto;
+            }
+            .nav-icon {
+                margin-right: 0;
+                font-size: 1.3rem;
+            }
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: static;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .top-navbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+                padding: 20px;
+            }
+            .search-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .faculty-grid {
+                grid-template-columns: 1fr;
+            }
+            .filter-pills {
+                flex-direction: column;
+            }
+            .filter-pill {
+                width: 100%;
+                justify-content: center;
+            }
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            .profile-badges {
+                justify-content: center;
+            }
+            .info-row {
+                flex-direction: column;
+            }
+            .info-label {
+                width: 100%;
+                margin-bottom: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- ===== SIDEBAR NAVIGATION - DEPARTMENTS ===== -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-graduation-cap logo-icon"></i>
+                    <span class="logo-text">FpmsPortal</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Departments</div>
+                    <a href="#" class="nav-item active" onclick="event.preventDefault(); filterByDepartment('all'); return false;" data-dept="all" id="nav-all">
+                        <i class="fas fa-university nav-icon"></i>
+                        <span class="nav-text">All Faculty</span>
+                        <span class="department-badge" id="totalFacultyCount">0</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="event.preventDefault(); filterByDepartment('CSE'); return false;" data-dept="CSE" id="nav-cse">
+                        <i class="fas fa-laptop-code nav-icon"></i>
+                        <span class="nav-text">Computer Science (CSE)</span>
+                        <span class="department-badge" id="cseCount">0</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="event.preventDefault(); filterByDepartment('IT'); return false;" data-dept="IT" id="nav-it">
+                        <i class="fas fa-network-wired nav-icon"></i>
+                        <span class="nav-text">Information Technology (IT)</span>
+                        <span class="department-badge" id="itCount">0</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="event.preventDefault(); filterByDepartment('ENTC'); return false;" data-dept="ENTC" id="nav-entc">
+                        <i class="fas fa-microchip nav-icon"></i>
+                        <span class="nav-text">Electronics & Telecomm</span>
+                        <span class="department-badge" id="entcCount">0</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="event.preventDefault(); filterByDepartment('MECH'); return false;" data-dept="MECH" id="nav-mech">
+                        <i class="fas fa-cogs nav-icon"></i>
+                        <span class="nav-text">Mechanical Engineering</span>
+                        <span class="department-badge" id="mechCount">0</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="event.preventDefault(); filterByDepartment('FIRST'); return false;" data-dept="FIRST" id="nav-first">
+                        <i class="fas fa-book nav-icon"></i>
+                        <span class="nav-text">First Year Engineering</span>
+                        <span class="department-badge" id="firstCount">0</span>
+                    </a>
+                </div>
+            </nav>
+            
+            <div style="padding: 24px; border-top: 1px solid #e2e8f0; margin-top: auto;">
+                <div style="background: #eef2ff; padding: 16px; border-radius: 16px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                        <i class="fas fa-info-circle" style="color: #2563eb;"></i>
+                        <span style="font-weight: 600; color: #1e293b;">Academic Year</span>
+                    </div>
+                    <span style="background: white; padding: 6px 14px; border-radius: 30px; font-size: 0.85rem; font-weight: 600; color: #2563eb;">2025 - 2026</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <main class="main-content">
+            <!-- ===== TOP NAVIGATION BAR ===== -->
+            <nav class="top-navbar">
+                <div class="nav-left">
+                    <a href="index.html" class="home-link">
+                        <i class="fas fa-home"></i>
+                        Home
+                    </a>
+                    <div class="page-title">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                        Faculty Directory
+                    </div>
+                </div>
+                <div class="nav-right">
+                    <div class="viewer-badge">
+                        <i class="fas fa-eye"></i>
+                        Public View
+                    </div>
+                </div>
+            </nav>
+
+            <div class="content">
+                <!-- ===== SEARCH AND FILTER SECTION ===== -->
+                <div class="search-section">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" class="search-input" placeholder="Search faculty by name, department, or designation..." autocomplete="off" onkeyup="filterBySearch()">
+                    </div>
+                    <div class="filter-options">
+                        <select id="departmentFilter" class="filter-select" onchange="filterByDepartment(this.value)">
+                            <option value="all">All Departments</option>
+                            <option value="CSE">Computer Science (CSE)</option>
+                            <option value="IT">Information Technology (IT)</option>
+                            <option value="ENTC">Electronics & Telecomm (ENTC)</option>
+                            <option value="MECH">Mechanical (MECH)</option>
+                            <option value="First">First Year (First)</option>
+                        </select>
+                    </div>
+                    <div class="stats-badge" id="facultyStats">
+                        <i class="fas fa-users"></i>
+                        <span id="displayedCount">0</span> / <span id="totalCount">0</span> Faculty
+                    </div>
+                </div>
+
+                <!-- ===== DEPARTMENT FILTER PILLS ===== -->
+                <div class="filter-pills">
+                    <button class="filter-pill active" onclick="filterByDepartment('all')" id="pill-all">
+                        <i class="fas fa-university"></i> All
+                    </button>
+                    <button class="filter-pill" onclick="filterByDepartment('CSE')" id="pill-cse">
+                        <i class="fas fa-laptop-code"></i> CSE
+                    </button>
+                    <button class="filter-pill" onclick="filterByDepartment('IT')" id="pill-it">
+                        <i class="fas fa-network-wired"></i> IT
+                    </button>
+                    <button class="filter-pill" onclick="filterByDepartment('ENTC')" id="pill-entc">
+                        <i class="fas fa-microchip"></i> ENTC
+                    </button>
+                    <button class="filter-pill" onclick="filterByDepartment('MECH')" id="pill-mech">
+                        <i class="fas fa-cogs"></i> MECH
+                    </button>
+                    <button class="filter-pill" onclick="filterByDepartment('First')" id="pill-first">
+                        <i class="fas fa-book"></i> First Year
+                    </button>
+                </div>
+
+                <!-- ===== FACULTY CARDS GRID ===== -->
+                <div class="faculty-grid" id="facultyGrid">
+                    <!-- Loading spinner -->
+                    <div class="loading-spinner">
+                        <div class="spinner"></div>
+                        <p style="color: #64748b; font-size: 1.1rem;">Loading approved faculty profiles...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ===== COMPLETE PROFILE MODAL ===== -->
+    <div class="profile-modal" id="profileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-id-card"></i> Complete Faculty Profile</h2>
+                <button class="modal-close" onclick="closeProfileModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="profileModalBody">
+                <!-- Complete profile data will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // FIREBASE CONFIGURATION
+        // ============================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyCLUvxU19ePhSex0g0-VEVZJlwVP4vkRiU",
+            authDomain: "faculty-profile-manageme-b912b.firebaseapp.com",
+            projectId: "faculty-profile-manageme-b912b",
+            storageBucket: "faculty-profile-manageme-b912b.firebasestorage.app",
+            messagingSenderId: "492340972765",
+            appId: "1:492340972765:web:30ef69e2ce0e6e59c9df34",
+            measurementId: "G-42SHN6353G"
+        };
+
+        // ============================================
+        // GLOBAL VARIABLES
+        // ============================================
+        let db;
+        let facultyData = [];
+        let filteredFacultyData = [];
+        let currentDepartment = 'all';
+        let currentSearchTerm = '';
+
+        // ============================================
+        // INITIALIZE FIREBASE
+        // ============================================
+        function initFirebase() {
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                    console.log("✅ Firebase initialized");
+                }
+                db = firebase.firestore();
+                
+                db.enablePersistence({ synchronizeTabs: true })
+                    .catch((err) => {
+                        console.warn("Firebase persistence error:", err.code);
+                    });
+                
+                console.log("✅ Firestore ready");
+                return true;
+            } catch (error) {
+                console.error("❌ Firebase initialization failed:", error);
+                return false;
+            }
+        }
+
+        // ============================================
+        // LOAD FACULTY DATA - NO INDEX REQUIRED VERSION
+        // ✅ Works immediately - only shows approved faculty
+        // ✅ Sorts by last updated using JavaScript
+        // ============================================
+        async function loadFacultyData() {
+            if (!db) {
+                console.error("Firestore not initialized");
+                return;
+            }
+
+            try {
+                // Show loading state
+                const grid = document.getElementById('facultyGrid');
+                grid.innerHTML = `
+                    <div class="loading-spinner">
+                        <div class="spinner"></div>
+                        <p style="color: #64748b;">Loading approved faculty profiles...</p>
+                    </div>
+                `;
+
+                // ✅ Get ONLY approved profiles - NO orderBy (avoids index requirement)
+                const snapshot = await db.collection('facultyProfiles')
+                    .where('submissionStatus', '==', 'approved')
+                    .get();
+
+                if (snapshot.empty) {
+                    grid.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-user-graduate"></i>
+                            <h3>No Approved Faculty Profiles</h3>
+                            <p>No faculty members have been approved yet. Please check back later.</p>
+                        </div>
+                    `;
+                    facultyData = [];
+                    filteredFacultyData = [];
+                    updateDepartmentCounts();
+                    return;
+                }
+
+                // Convert to array
+                facultyData = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    const personalInfo = data.personalInfo || {};
+                    const fullName = personalInfo.fullName || 'Faculty Member';
+                    
+                    const qualifications = data.qualifications || [];
+                    const researchProjects = data.researchProjects || [];
+                    const publications = data.publications || [];
+                    const workshops = data.workshops || [];
+                    const awards = data.awards || [];
+                    const patents = data.patents || [];
+                    const certificates = data.certificates || [];
+                    const professionalMemberships = data.professionalMemberships || [];
+                    
+                    let department = data.department || 'CSE';
+                    if (department.includes('Computer') || department === 'CSE') department = 'CSE';
+                    else if (department.includes('Information') || department === 'IT') department = 'IT';
+                    else if (department.includes('Electronics') || department === 'ENTC') department = 'ENTC';
+                    else if (department.includes('Mechanical') || department === 'MECH') department = 'MECH';
+                    
+                    const initials = fullName.split(' ')
+                        .map(n => n[0])
+                        .join('')
+                        .substring(0, 2)
+                        .toUpperCase();
+
+                    // Parse lastUpdated date for sorting
+                    let lastUpdatedDate = new Date(0); // Default to oldest
+                    if (data.lastUpdated) {
+                        if (data.lastUpdated.seconds) {
+                            lastUpdatedDate = new Date(data.lastUpdated.seconds * 1000);
+                        } else if (typeof data.lastUpdated === 'string') {
+                            lastUpdatedDate = new Date(data.lastUpdated);
+                        }
+                    }
+
+                    return {
+                        id: doc.id,
+                        name: fullName,
+                        email: personalInfo.email || 'Not provided',
+                        phone: personalInfo.phone || 'Not provided',
+                        dob: personalInfo.dob || 'Not provided',
+                        gender: personalInfo.gender || 'Not provided',
+                        address: personalInfo.address || 'Not provided',
+                        department: department,
+                        designation: personalInfo.designation || 'Faculty',
+                        employeeId: data.employeeId || 'Not provided',
+                        profileComplete: data.profileComplete || false,
+                        lastUpdated: data.lastUpdated ? (data.lastUpdated.seconds ? new Date(data.lastUpdated.seconds * 1000).toLocaleString() : 'Never') : 'Never',
+                        lastUpdatedDate: lastUpdatedDate, // For sorting
+                        
+                        qualifications: qualifications,
+                        researchProjects: researchProjects,
+                        publications: publications,
+                        workshops: workshops,
+                        awards: awards,
+                        patents: patents,
+                        certificates: certificates,
+                        professionalMemberships: professionalMemberships,
+                        
+                        qualificationsCount: qualifications.length,
+                        projectsCount: researchProjects.length,
+                        publicationsCount: publications.length,
+                        workshopsCount: workshops.length,
+                        awardsCount: awards.length,
+                        patentsCount: patents.length,
+                        certificatesCount: certificates.length,
+                        membershipsCount: professionalMemberships.length,
+                        
+                        initials: initials,
+                        rawData: data,
+                        personalInfo: personalInfo
+                    };
+                });
+
+                // ✅ Sort manually in JavaScript - NO INDEX NEEDED!
+                facultyData.sort((a, b) => b.lastUpdatedDate - a.lastUpdatedDate);
+
+                console.log(`✅ Loaded ${facultyData.length} approved faculty profiles (sorted client-side)`);
+                
+                filteredFacultyData = [...facultyData];
+                updateDepartmentCounts();
+                renderFacultyCards();
+                
+            } catch (error) {
+                console.error("❌ Error loading faculty data:", error);
+                const grid = document.getElementById('facultyGrid');
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-circle" style="color: #ef4444;"></i>
+                        <h3>Error Loading Data</h3>
+                        <p>${error.message}</p>
+                        <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 24px; background: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                            <i class="fas fa-sync-alt"></i> Retry
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // ============================================
+        // UPDATE DEPARTMENT COUNTS
+        // ============================================
+        function updateDepartmentCounts() {
+            const counts = {
+                all: facultyData.length,
+                CSE: facultyData.filter(f => f.department === 'CSE').length,
+                IT: facultyData.filter(f => f.department === 'IT').length,
+                ENTC: facultyData.filter(f => f.department === 'ENTC').length,
+                MECH: facultyData.filter(f => f.department === 'MECH').length
+            };
+
+            document.getElementById('totalFacultyCount').textContent = counts.all;
+            document.getElementById('cseCount').textContent = counts.CSE;
+            document.getElementById('itCount').textContent = counts.IT;
+            document.getElementById('entcCount').textContent = counts.ENTC;
+            document.getElementById('mechCount').textContent = counts.MECH;
+            document.getElementById('totalCount').textContent = counts.all;
+            document.getElementById('displayedCount').textContent = filteredFacultyData.length;
+        }
+
+        // ============================================
+        // FILTER BY DEPARTMENT
+        // ============================================
+        function filterByDepartment(dept) {
+            console.log("Filtering by department:", dept);
+            currentDepartment = dept;
+            
+            // Update department filter dropdown
+            const deptFilter = document.getElementById('departmentFilter');
+            if (deptFilter) deptFilter.value = dept;
+            
+            // Update filter pills
+            document.querySelectorAll('.filter-pill').forEach(pill => {
+                pill.classList.remove('active');
+            });
+            const activePill = document.getElementById(`pill-${dept === 'all' ? 'all' : dept}`);
+            if (activePill) activePill.classList.add('active');
+            
+            // Update sidebar navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            const activeNav = document.getElementById(`nav-${dept === 'all' ? 'all' : dept}`);
+            if (activeNav) activeNav.classList.add('active');
+            
+            // Apply filters
+            applyFilters();
+        }
+
+        // ============================================
+        // FILTER BY SEARCH
+        // ============================================
+        function filterBySearch() {
+            const searchInput = document.getElementById('searchInput');
+            currentSearchTerm = searchInput.value.toLowerCase().trim();
+            console.log("Searching for:", currentSearchTerm);
+            applyFilters();
+        }
+
+        // ============================================
+        // APPLY ALL FILTERS
+        // ============================================
+        function applyFilters() {
+            // Start with all faculty data
+            let filtered = [...facultyData];
+            
+            // Apply department filter
+            if (currentDepartment !== 'all') {
+                filtered = filtered.filter(f => f.department === currentDepartment);
+            }
+            
+            // Apply search filter
+            if (currentSearchTerm) {
+                filtered = filtered.filter(f => 
+                    f.name.toLowerCase().includes(currentSearchTerm) ||
+                    f.department.toLowerCase().includes(currentSearchTerm) ||
+                    f.designation.toLowerCase().includes(currentSearchTerm) ||
+                    f.email.toLowerCase().includes(currentSearchTerm) ||
+                    f.employeeId.toLowerCase().includes(currentSearchTerm)
+                );
+            }
+            
+            filteredFacultyData = filtered;
+            document.getElementById('displayedCount').textContent = filtered.length;
+            
+            renderFacultyCards();
+        }
+
+        // ============================================
+        // RENDER FACULTY CARDS
+        // ============================================
+        function renderFacultyCards() {
+            const grid = document.getElementById('facultyGrid');
+            
+            if (facultyData.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-user-graduate"></i>
+                        <h3>No Approved Faculty Profiles</h3>
+                        <p>No faculty members have been approved yet. Please check back later.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            if (filteredFacultyData.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-search"></i>
+                        <h3>No matching faculty found</h3>
+                        <p>Try adjusting your search or filter criteria</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            
+            filteredFacultyData.forEach(faculty => {
+                let deptIcon = 'fa-building';
+                let deptColor = '#64748b';
+                
+                switch(faculty.department) {
+                    case 'CSE': 
+                        deptIcon = 'fa-laptop-code'; 
+                        deptColor = '#2563eb'; 
+                        break;
+                    case 'IT': 
+                        deptIcon = 'fa-network-wired'; 
+                        deptColor = '#7c3aed'; 
+                        break;
+                    case 'ENTC': 
+                        deptIcon = 'fa-microchip'; 
+                        deptColor = '#ea580c'; 
+                        break;
+                    case 'MECH': 
+                        deptIcon = 'fa-cogs'; 
+                        deptColor = '#059669'; 
+                        break;
+                }
+
+                html += `
+                    <div class="faculty-card">
+                        <div class="card-accent" style="background: linear-gradient(180deg, ${deptColor} 0%, ${deptColor}80 100%);"></div>
+                        <div class="faculty-card-header">
+                            <div class="faculty-avatar" style="background: linear-gradient(135deg, ${deptColor} 0%, ${deptColor}cc 100%);">
+                                ${faculty.initials}
+                            </div>
+                            <div class="faculty-info">
+                                <div class="faculty-name">${escapeHtml(faculty.name)}</div>
+                                <span class="faculty-dept">${escapeHtml(faculty.department)}</span>
+                                <div class="faculty-designation">
+                                    <i class="fas fa-user-tie"></i> ${escapeHtml(faculty.designation)}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="faculty-details">
+                            <div class="detail-row">
+                                <i class="fas fa-envelope"></i>
+                                <span>${escapeHtml(faculty.email)}</span>
+                            </div>
+                            <div class="detail-row">
+                                <i class="fas fa-id-card"></i>
+                                <span>ID: ${escapeHtml(faculty.employeeId)}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="faculty-stats-mini">
+                            <div class="stat-mini-item">
+                                <div class="stat-mini-value">${faculty.qualificationsCount}</div>
+                                <div class="stat-mini-label">Qual</div>
+                            </div>
+                            <div class="stat-mini-item">
+                                <div class="stat-mini-value">${faculty.publicationsCount}</div>
+                                <div class="stat-mini-label">Pubs</div>
+                            </div>
+                            <div class="stat-mini-item">
+                                <div class="stat-mini-value">${faculty.projectsCount}</div>
+                                <div class="stat-mini-label">Proj</div>
+                            </div>
+                            <div class="stat-mini-item">
+                                <div class="stat-mini-value">${faculty.workshopsCount}</div>
+                                <div class="stat-mini-label">WS</div>
+                            </div>
+                        </div>
+                        
+                        <div class="badge-container">
+                            ${faculty.awardsCount > 0 ? `<span class="badge-sm badge-award"><i class="fas fa-award"></i> ${faculty.awardsCount} Awards</span>` : ''}
+                            ${faculty.patentsCount > 0 ? `<span class="badge-sm badge-patent"><i class="fas fa-lightbulb"></i> ${faculty.patentsCount} Patents</span>` : ''}
+                            ${faculty.certificatesCount > 0 ? `<span class="badge-sm badge-cert"><i class="fas fa-certificate"></i> ${faculty.certificatesCount} Certs</span>` : ''}
+                            ${faculty.membershipsCount > 0 ? `<span class="badge-sm badge-membership"><i class="fas fa-id-card"></i> ${faculty.membershipsCount} Memberships</span>` : ''}
+                        </div>
+                        
+                        <button class="view-details-btn" onclick="viewCompleteProfile('${faculty.id}')">
+                            <i class="fas fa-id-card"></i> View Complete Profile
+                        </button>
+                    </div>
+                `;
+            });
+            
+            grid.innerHTML = html;
+        }
+
+        // ============================================
+        // VIEW COMPLETE PROFILE
+        // ============================================
+        function viewCompleteProfile(facultyId) {
+            const faculty = facultyData.find(f => f.id === facultyId);
+            if (!faculty) return;
+            
+            const modal = document.getElementById('profileModal');
+            const body = document.getElementById('profileModalBody');
+            
+            let deptIcon = 'fa-building';
+            let deptColor = '#2563eb';
+            let deptFullName = faculty.department;
+            
+            switch(faculty.department) {
+                case 'CSE': 
+                    deptIcon = 'fa-laptop-code'; 
+                    deptColor = '#2563eb';
+                    deptFullName = 'Computer Science & Engineering';
+                    break;
+                case 'IT': 
+                    deptIcon = 'fa-network-wired'; 
+                    deptColor = '#7c3aed';
+                    deptFullName = 'Information Technology';
+                    break;
+                case 'ENTC': 
+                    deptIcon = 'fa-microchip'; 
+                    deptColor = '#ea580c';
+                    deptFullName = 'Electronics & Telecommunication';
+                    break;
+                case 'MECH': 
+                    deptIcon = 'fa-cogs'; 
+                    deptColor = '#059669';
+                    deptFullName = 'Mechanical Engineering';
+                    break;
+            }
+
+            // Format all sections
+            let qualificationsHtml = formatQualifications(faculty.qualifications);
+            let projectsHtml = formatResearchProjects(faculty.researchProjects);
+            let publicationsHtml = formatPublications(faculty.publications);
+            let workshopsHtml = formatWorkshops(faculty.workshops);
+            let awardsHtml = formatAwards(faculty.awards);
+            let patentsHtml = formatPatents(faculty.patents);
+            let certificatesHtml = formatCertificates(faculty.certificates);
+            let membershipsHtml = formatProfessionalMemberships(faculty.professionalMemberships);
+
+            body.innerHTML = `
+                <div>
+                    <div class="profile-header">
+                        <div class="profile-avatar-large" style="background: linear-gradient(135deg, ${deptColor} 0%, ${deptColor}cc 100%);">
+                            ${faculty.initials}
+                        </div>
+                        <div class="profile-title">
+                            <h1>${escapeHtml(faculty.name)}</h1>
+                            <p style="font-size: 1.2rem; color: ${deptColor}; font-weight: 600; margin-bottom: 8px;">
+                                <i class="fas ${deptIcon}"></i> ${escapeHtml(faculty.designation)}
+                            </p>
+                            <div class="profile-badges">
+                                <span class="badge badge-primary">
+                                    <i class="fas ${deptIcon}"></i> ${escapeHtml(deptFullName)}
+                                </span>
+                                <span class="badge badge-info">
+                                    <i class="fas fa-id-card"></i> ID: ${escapeHtml(faculty.employeeId)}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <h3><i class="fas fa-user"></i> Personal Information</h3>
+                            <div class="info-row"><span class="info-label">Full Name:</span><span class="info-value">${escapeHtml(faculty.name)}</span></div>
+                            <div class="info-row"><span class="info-label">Email:</span><span class="info-value">${escapeHtml(faculty.email)}</span></div>
+                            <div class="info-row"><span class="info-label">Phone:</span><span class="info-value">${escapeHtml(faculty.phone)}</span></div>
+                            <div class="info-row"><span class="info-label">Date of Birth:</span><span class="info-value">${escapeHtml(faculty.dob)}</span></div>
+                            <div class="info-row"><span class="info-label">Gender:</span><span class="info-value">${escapeHtml(faculty.gender)}</span></div>
+                            <div class="info-row"><span class="info-label">Address:</span><span class="info-value">${escapeHtml(faculty.address)}</span></div>
+                        </div>
+                        <div class="info-card">
+                            <h3><i class="fas fa-briefcase"></i> Professional Information</h3>
+                            <div class="info-row"><span class="info-label">Department:</span><span class="info-value">${escapeHtml(deptFullName)}</span></div>
+                            <div class="info-row"><span class="info-label">Designation:</span><span class="info-value">${escapeHtml(faculty.designation)}</span></div>
+                            <div class="info-row"><span class="info-label">Employee ID:</span><span class="info-value">${escapeHtml(faculty.employeeId)}</span></div>
+                            <div class="info-row"><span class="info-label">Last Updated:</span><span class="info-value">${escapeHtml(faculty.lastUpdated)}</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="section-block">
+                        <h3 class="section-title"><i class="fas fa-graduation-cap"></i> Academic Qualifications <span class="count-badge">${faculty.qualificationsCount}</span></h3>
+                        ${qualificationsHtml}
+                    </div>
+                    
+                    <div class="section-block">
+                        <h3 class="section-title"><i class="fas fa-flask"></i> Research Projects <span class="count-badge">${faculty.projectsCount}</span></h3>
+                        ${projectsHtml}
+                    </div>
+                    
+                    <div class="section-block">
+                        <h3 class="section-title"><i class="fas fa-file-alt"></i> Publications <span class="count-badge">${faculty.publicationsCount}</span></h3>
+                        ${publicationsHtml}
+                    </div>
+                    
+                    <div class="section-block">
+                        <h3 class="section-title"><i class="fas fa-chalkboard-teacher"></i> Workshops / FDP / STTP <span class="count-badge">${faculty.workshopsCount}</span></h3>
+                        ${workshopsHtml}
+                    </div>
+                    
+                    <div class="section-block">
+                        <h3 class="section-title"><i class="fas fa-award"></i> Awards & Achievements <span class="count-badge">${faculty.awardsCount}</span></h3>
+                        ${awardsHtml}
+                    </div>
+                    
+                    <div class="section-block">
+                        <h3 class="section-title"><i class="fas fa-lightbulb"></i> Patents <span class="count-badge">${faculty.patentsCount}</span></h3>
+                        ${patentsHtml}
+                    </div>
+                    
+                    <div class="section-block">
+                        <h3 class="section-title"><i class="fas fa-certificate"></i> Professional Certificates <span class="count-badge">${faculty.certificatesCount}</span></h3>
+                        ${certificatesHtml}
+                    </div>
+                    
+                    <div class="section-block">
+                        <h3 class="section-title"><i class="fas fa-id-card"></i> Professional Body Memberships <span class="count-badge">${faculty.membershipsCount}</span></h3>
+                        ${membershipsHtml}
+                    </div>
+                </div>
+            `;
+            
+            modal.style.display = 'flex';
+        }
+
+        // ============================================
+        // FORMATTING FUNCTIONS
+        // ============================================
+        function formatQualifications(quals) {
+            if (!quals || quals.length === 0) return '<p style="color: #64748b;">No qualifications added</p>';
+            let html = '<ul class="items-list">';
+            quals.forEach(q => {
+                html += `<li><strong>${escapeHtml(q.degreeName || 'Degree')}</strong>${q.specialization ? ` - ${escapeHtml(q.specialization)}` : ''}<div class="item-meta">${escapeHtml(q.university || '')} ${q.completionYear ? `(${q.completionYear})` : ''}${q.grade ? ` | Grade: ${q.grade}` : ''}</div></li>`;
+            });
+            html += '</ul>';
+            return html;
+        }
+
+        function formatResearchProjects(projects) {
+            if (!projects || projects.length === 0) return '<p style="color: #64748b;">No research projects added</p>';
+            let html = '<ul class="items-list">';
+            projects.forEach(p => {
+                const totalStudents = (p.phdStudents || 0) + (p.mastersStudents || 0) + (p.ugStudents || 0);
+                html += `<li><strong>${escapeHtml(p.title || 'Research Project')}</strong><div class="item-meta">Role: ${escapeHtml(p.role || 'N/A')} | Duration: ${escapeHtml(p.startYear || '')} - ${escapeHtml(p.endYear || 'Present')}${p.fundingDetails ? `<br>Funding: ${escapeHtml(p.fundingDetails)}` : ''}${totalStudents > 0 ? `<br>Students Guided: ${totalStudents} (PhD: ${p.phdStudents || 0}, Masters: ${p.mastersStudents || 0}, UG: ${p.ugStudents || 0})` : ''}</div></li>`;
+            });
+            html += '</ul>';
+            return html;
+        }
+
+        function formatPublications(pubs) {
+            if (!pubs || pubs.length === 0) return '<p style="color: #64748b;">No publications added</p>';
+            let html = '<ul class="items-list">';
+            pubs.forEach(p => {
+                html += `<li><strong>${escapeHtml(p.title || 'Publication')}</strong><div class="item-meta">${escapeHtml(p.journal || '')} ${p.date ? ` | ${new Date(p.date).toLocaleDateString()}` : ''}${p.authorPosition ? ` | ${p.authorPosition.replace('-', ' ')}` : ''}${p.doi ? `<br>DOI: <a href="${p.doi}" target="_blank" style="color: #2563eb;">${p.doi}</a>` : ''}</div></li>`;
+            });
+            html += '</ul>';
+            return html;
+        }
+
+        function formatWorkshops(workshops) {
+            if (!workshops || workshops.length === 0) return '<p style="color: #64748b;">No workshops added</p>';
+            let html = '<ul class="items-list">';
+            workshops.forEach(w => {
+                const type = w.type === 'attended' ? 'Attended' : 'Organized';
+                const categoryMap = {
+                    'workshop': 'Workshop',
+                    'fdp': 'FDP',
+                    'sttp': 'STTP',
+                    'seminar': 'Seminar',
+                    'conference': 'Conference',
+                    'other': 'Other'
+                };
+                const category = categoryMap[w.category] || 'Workshop';
+                
+                html += `<li>
+                    <strong>${escapeHtml(w.title || 'Program')}</strong>
+                    <span style="background: #2563eb; color: white; padding: 2px 10px; border-radius: 20px; font-size: 0.7rem; margin-left: 10px;">${type}</span>
+                    <span style="background: #10b981; color: white; padding: 2px 10px; border-radius: 20px; font-size: 0.7rem; margin-left: 5px;">${category}</span>
+                    <div class="item-meta">
+                        ${w.type === 'attended' ? `
+                            <strong>Institute:</strong> ${escapeHtml(w.institute || 'N/A')}<br>
+                            <strong>Duration:</strong> ${w.startDate ? new Date(w.startDate).toLocaleDateString() : 'N/A'} - ${w.endDate ? new Date(w.endDate).toLocaleDateString() : 'Present'}<br>
+                            <strong>Mode:</strong> ${escapeHtml(w.mode || 'N/A')}<br>
+                            <strong>Certificate:</strong> ${w.certificateIssued === 'yes' ? 'Yes' : w.certificateIssued === 'no' ? 'No' : 'N/A'}<br>
+                            ${w.learnings ? `<strong>Learnings:</strong> ${escapeHtml(w.learnings)}` : ''}
+                        ` : `
+                            <strong>Organized For:</strong> ${escapeHtml(w.organizedFor || 'N/A')}<br>
+                            <strong>Duration:</strong> ${w.startDate ? new Date(w.startDate).toLocaleDateString() : 'N/A'} - ${w.endDate ? new Date(w.endDate).toLocaleDateString() : 'Present'}<br>
+                            <strong>Participants:</strong> ${w.participants || 0}<br>
+                            <strong>Role:</strong> ${escapeHtml(w.role || 'N/A')}<br>
+                            ${w.funding ? `<strong>Funding:</strong> ${escapeHtml(w.funding)}<br>` : ''}
+                            ${w.description ? `<strong>Description:</strong> ${escapeHtml(w.description)}` : ''}
+                        `}
+                    </div>
+                </li>`;
+            });
+            html += '</ul>';
+            return html;
+        }
+
+        function formatAwards(awards) {
+            if (!awards || awards.length === 0) return '<p style="color: #64748b;">No awards added</p>';
+            let html = '<ul class="items-list">';
+            awards.forEach(a => {
+                html += `<li><strong>${escapeHtml(a.title || 'Award')}</strong><div class="item-meta">${escapeHtml(a.organization || '')} ${a.year ? `(${a.year})` : ''}${a.description ? `<br>${escapeHtml(a.description)}` : ''}</div></li>`;
+            });
+            html += '</ul>';
+            return html;
+        }
+
+        function formatPatents(patents) {
+            if (!patents || patents.length === 0) return '<p style="color: #64748b;">No patents added</p>';
+            let html = '<ul class="items-list">';
+            patents.forEach(p => {
+                html += `<li><strong>${escapeHtml(p.title || 'Patent')}</strong><div class="item-meta"><strong>Status:</strong> ${escapeHtml(p.status || 'N/A')}${p.number ? `<br><strong>Patent No:</strong> ${escapeHtml(p.number)}` : ''}${p.filingDate ? `<br><strong>Filed:</strong> ${new Date(p.filingDate).toLocaleDateString()}` : ''}${p.publishingDate ? `<br><strong>Published:</strong> ${new Date(p.publishingDate).toLocaleDateString()}` : ''}</div></li>`;
+            });
+            html += '</ul>';
+            return html;
+        }
+
+        function formatCertificates(certs) {
+            if (!certs || certs.length === 0) return '<p style="color: #64748b;">No certificates added</p>';
+            let html = '<ul class="items-list">';
+            certs.forEach(c => {
+                html += `<li><strong>${escapeHtml(c.title || 'Certificate')}</strong><div class="item-meta">${escapeHtml(c.organization || '')}${c.issueDate ? `<br><strong>Issued:</strong> ${new Date(c.issueDate).toLocaleDateString()}` : ''}${c.expiryDate ? `<br><strong>Expires:</strong> ${new Date(c.expiryDate).toLocaleDateString()}` : ''}</div></li>`;
+            });
+            html += '</ul>';
+            return html;
+        }
+
+        function formatProfessionalMemberships(memberships) {
+            if (!memberships || memberships.length === 0) return '<p style="color: #64748b;">No professional memberships added</p>';
+            let html = '<ul class="items-list">';
+            memberships.forEach(m => {
+                const statusClass = m.status === 'active' ? 'active' : m.status === 'expired' ? 'expired' : 'pending';
+                const validFrom = m.validFrom ? new Date(m.validFrom).toLocaleDateString() : 'N/A';
+                const validUntil = m.validUntil ? new Date(m.validUntil).toLocaleDateString() : 'Lifetime';
+                
+                html += `<li>
+                    <strong>${escapeHtml(m.organizationName || 'Membership')}</strong>
+                    <span class="status-badge ${statusClass}">${m.status || 'Active'}</span>
+                    <div class="item-meta">
+                        <strong>Membership No:</strong> ${escapeHtml(m.membershipNumber || 'N/A')}<br>
+                        <strong>Valid From:</strong> ${validFrom}<br>
+                        <strong>Valid Until:</strong> ${validUntil}
+                    </div>
+                </li>`;
+            });
+            html += '</ul>';
+            return html;
+        }
+
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profileModal').style.display = 'none';
+        }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        window.onload = function() {
+            console.log("🚀 Faculty Profiles Page Initializing...");
+            
+            if (initFirebase()) {
+                loadFacultyData();
+            } else {
+                const grid = document.getElementById('facultyGrid');
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-circle" style="color: #ef4444;"></i>
+                        <h3>Connection Error</h3>
+                        <p>Failed to connect to database. Please refresh the page.</p>
+                    </div>
+                `;
+            }
+        };
+
+        // ============================================
+        // EXPORT GLOBAL FUNCTIONS
+        // ============================================
+        window.filterByDepartment = filterByDepartment;
+        window.filterBySearch = filterBySearch;
+        window.viewCompleteProfile = viewCompleteProfile;
+        window.closeProfileModal = closeProfileModal;
+        
+        console.log("✅ Faculty Profiles Page Ready - ONLY SHOWING APPROVED FACULTY! (No index required)");
+    </script>
+</body>
+</html>

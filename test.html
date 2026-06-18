@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firebase Debug Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .success { color: green; }
+        .error { color: red; }
+        .warning { color: orange; }
+        #output { 
+            background: #f5f5f5; 
+            padding: 15px; 
+            border-radius: 5px; 
+            margin-top: 20px; 
+        }
+        button { 
+            padding: 10px 20px; 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+        }
+    </style>
+</head>
+<body>
+    <h2>Firebase Connection Test</h2>
+    <button onclick="runAllTests()">Run All Tests</button>
+    <div id="output">Click button to start tests...</div>
+
+    <!-- Load Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script>
+        const output = document.getElementById('output');
+        
+        // Your Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCLUvxU19ePhSex0g0-VEVZJlwVP4vkRiU",
+            authDomain: "faculty-profile-manageme-b912b.firebaseapp.com",
+            projectId: "faculty-profile-manageme-b912b",
+            storageBucket: "faculty-profile-manageme-b912b.firebasestorage.app",
+            messagingSenderId: "492340972765",
+            appId: "1:492340972765:web:30ef69e2ce0e6e59c9df34",
+            measurementId: "G-42SHN6353G"
+        };
+
+        function log(message, type = 'info') {
+            const color = type === 'success' ? 'green' : 
+                         type === 'error' ? 'red' : 
+                         type === 'warning' ? 'orange' : 'black';
+            output.innerHTML += `<p style="color:${color}">${message}</p>`;
+        }
+
+        async function runAllTests() {
+            output.innerHTML = '';
+            log('Starting Firebase tests...', 'info');
+            
+            // Test 1: Check if Firebase scripts loaded
+            log('Test 1: Checking Firebase scripts...');
+            if (typeof firebase === 'undefined') {
+                log('❌ Firebase scripts not loaded. Check internet connection.', 'error');
+                return;
+            }
+            log('✅ Firebase scripts loaded', 'success');
+            
+            // Test 2: Initialize Firebase
+            log('Test 2: Initializing Firebase...');
+            try {
+                firebase.initializeApp(firebaseConfig);
+                log('✅ Firebase initialized', 'success');
+            } catch (error) {
+                if (error.code === 'app/duplicate-app') {
+                    log('⚠️ Firebase already initialized', 'warning');
+                } else {
+                    log(`❌ Firebase init error: ${error.message}`, 'error');
+                    return;
+                }
+            }
+            
+            // Test 3: Check auth service
+            log('Test 3: Checking Auth service...');
+            try {
+                const auth = firebase.auth();
+                log('✅ Auth service loaded', 'success');
+                
+                // Test 4: Auth state listener
+                log('Test 4: Testing auth state listener...');
+                const unsubscribe = auth.onAuthStateChanged((user) => {
+                    log(`✅ Auth listener triggered. User: ${user ? 'Logged in' : 'Not logged in'}`, 'success');
+                    unsubscribe(); // Clean up
+                });
+                
+                // Test 5: Try to create test user
+                log('Test 5: Testing user creation...');
+                try {
+                    // This will fail (test email), but should show proper error
+                    await auth.createUserWithEmailAndPassword("test-delete@example.com", "Test123456");
+                    log('✅ User creation test passed', 'success');
+                } catch (authError) {
+                    if (authError.code === 'auth/email-already-in-use') {
+                        log('✅ Auth working - email already exists (expected)', 'success');
+                    } else if (authError.code === 'auth/network-request-failed') {
+                        log('❌ Network error. Check tracking prevention in browser.', 'error');
+                        log('Solution: In Edge, go to Settings → Privacy → Tracking prevention → Set to "Basic"', 'warning');
+                    } else {
+                        log(`✅ Auth working - Got expected error: ${authError.code}`, 'success');
+                    }
+                }
+                
+            } catch (error) {
+                log(`❌ Auth error: ${error.message}`, 'error');
+                log('Possible solution: Use Chrome or disable Edge tracking prevention', 'warning');
+            }
+            
+            log('All tests completed!', 'info');
+        }
+
+        // Run tests on page load
+        window.onload = runAllTests;
+    </script>
+</body>
+</html>
